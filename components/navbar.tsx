@@ -68,7 +68,7 @@ export default function FairwayFamNavbar() {
             width={500} // Or keep 300 if you want
             height={500} // Set height close to nav height (48px is usually good)
             alt='FairwayFam'
-            className='object-contain h-48' // Ensure aspect ratio is preserved
+            className='object-contain h-48'
           />
         </NavbarBrand>
       </NavbarContent>
