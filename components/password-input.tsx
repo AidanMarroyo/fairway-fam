@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { Input, InputProps } from '@heroui/input';
 
 import React, { useState } from 'react';
