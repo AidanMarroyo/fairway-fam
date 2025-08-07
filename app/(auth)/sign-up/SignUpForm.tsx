@@ -1,14 +1,20 @@
 'use client';
+import LoadingButton from '@/components/loading-button';
 import { PasswordInput } from '@/components/password-input';
 import { Button } from '@heroui/button';
 import { addToast, Form, Input } from '@heroui/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function SignUpForm() {
   const [password, setPassword] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleSubmit = async (data: { [key: string]: FormDataEntryValue }) => {
     try {
+      setSubmitting(true);
+
       const response = await fetch('/api/auth/sign-up', {
         method: 'POST',
         body: JSON.stringify({
@@ -29,11 +35,12 @@ export default function SignUpForm() {
       }
 
       const result = await response.json();
-      if (result.status === 200) {
+      if (result.success) {
         addToast({
           title: 'Sign up successful',
           description: 'You have successfully signed up!',
         });
+        router.push('/');
       } else {
         addToast({
           title: 'Sign up failed',
@@ -42,6 +49,13 @@ export default function SignUpForm() {
       }
     } catch (error) {
       console.error('Error during sign up:', error);
+      addToast({
+        title: 'Sign up failed',
+        description:
+          'An unexpected error occurred. If this error persists, contact support.',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -84,9 +98,14 @@ export default function SignUpForm() {
           if (value !== password) return 'Passwords do not match';
         }}
       />
-      <Button type='submit' variant='bordered' className='mt-6'>
-        Submit
-      </Button>
+      <LoadingButton
+        loading={submitting}
+        type='submit'
+        variant='bordered'
+        className='mt-6'
+      >
+        {submitting ? 'FORE!' : 'Sign Up'}
+      </LoadingButton>
     </Form>
   );
 }

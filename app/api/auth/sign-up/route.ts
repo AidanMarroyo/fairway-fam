@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ status: 200 });
+    return NextResponse.json({ status: 200, success: true });
   } catch (error) {
     return NextResponse.json(
       { error: 'Internal Server Error' },

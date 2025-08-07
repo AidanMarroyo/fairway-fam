@@ -1,4 +1,4 @@
-import { createClient as createBrowserClient } from '@/lib/utils/supabase/server';
+import { createClient as createBrowserClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 

@@ -1,12 +1,71 @@
 'use client';
-
-import { Button } from '@heroui/button';
-import { Form, Input } from '@heroui/react';
-import { useState, useTransition } from 'react';
+import LoadingButton from '@/components/loading-button';
+import { PasswordInput } from '@/components/password-input';
+import { addToast, Form, Input } from '@heroui/react';
+import { useState } from 'react';
 
 export default function LoginForm() {
+  const [password, setPassword] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+
+  const handleSubmit = async (data: { [key: string]: FormDataEntryValue }) => {
+    try {
+      setSubmitting(true);
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data['email'],
+          password: data['password'],
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return addToast({
+          title: 'Login failed',
+          description: `${errorData.error || 'An error occurred'}`,
+        });
+      }
+
+      const result = await response.json();
+      if (result.status === 200) {
+        addToast({
+          title: 'Login successful',
+          description: 'You have successfully signed up!',
+        });
+      } else {
+        addToast({
+          title: 'Login failed',
+          description: 'An unexpected error occurred. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Error during Login:', error);
+      addToast({
+        title: 'Login failed',
+        description:
+          'An unexpected error occurred. If this error persists, contact support.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+
+      const data = Object.fromEntries(new FormData(e.currentTarget));
+
+      delete data['confirm-password'];
+
+      handleSubmit(data);
+    } catch (error) {
+      console.error('Error during form submission:', error);
+    }
   };
 
   return (
@@ -22,31 +81,15 @@ export default function LoginForm() {
           if (!value) return 'Please enter your email';
         }}
       />
-      <Input
-        type='password'
-        isRequired
-        name='password'
-        label='Password'
-        labelPlacement='outside'
-        placeholder='********'
-        validate={(value) => {
-          if (!value) return 'Please enter your password';
-          if (value.length < 6) return 'Password must be at least 6 characters';
-          if (value.length > 20)
-            return 'Password must be less than 20 characters';
-          if (!/[A-Z]/.test(value))
-            return 'Password must contain at least one uppercase letter';
-          if (!/[a-z]/.test(value))
-            return 'Password must contain at least one lowercase letter';
-          if (!/[0-9]/.test(value))
-            return 'Password must contain at least one number';
-          if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
-            return 'Password must contain at least one special character';
-        }}
-      />
-      <Button type='submit' variant='bordered'>
-        Submit
-      </Button>
+      <PasswordInput onChange={(e) => setPassword(e.target.value)} />
+      <LoadingButton
+        loading={submitting}
+        type='submit'
+        variant='bordered'
+        className='mt-6'
+      >
+        {submitting ? 'FORE!' : 'Login'}
+      </LoadingButton>
     </Form>
   );
 }
