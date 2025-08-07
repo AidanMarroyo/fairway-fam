@@ -1,13 +1,61 @@
 'use client';
-
 import { PasswordInput } from '@/components/password-input';
 import { Button } from '@heroui/button';
-import { Form, Input } from '@heroui/react';
-import { useState, useTransition } from 'react';
+import { addToast, Form, Input } from '@heroui/react';
+import { useState } from 'react';
 
 export default function SignUpForm() {
+  const [password, setPassword] = useState<string>('');
+
+  const handleSubmit = async (data: { [key: string]: FormDataEntryValue }) => {
+    try {
+      const response = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data['email'],
+          password: data['password'],
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return addToast({
+          title: 'Sign up failed',
+          description: `${errorData.error || 'An error occurred'}`,
+        });
+      }
+
+      const result = await response.json();
+      if (result.status === 200) {
+        addToast({
+          title: 'Sign up successful',
+          description: 'You have successfully signed up!',
+        });
+      } else {
+        addToast({
+          title: 'Sign up failed',
+          description: 'An unexpected error occurred. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Error during sign up:', error);
+    }
+  };
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+
+      const data = Object.fromEntries(new FormData(e.currentTarget));
+
+      delete data['confirm-password'];
+
+      handleSubmit(data);
+    } catch (error) {
+      console.error('Error during form submission:', error);
+    }
   };
 
   return (
@@ -23,7 +71,7 @@ export default function SignUpForm() {
           if (!value) return 'Please enter your email';
         }}
       />
-      <PasswordInput />
+      <PasswordInput onChange={(e) => setPassword(e.target.value)} />
       <Input
         type='password'
         isRequired
@@ -32,16 +80,8 @@ export default function SignUpForm() {
         labelPlacement='outside'
         placeholder='●●●●●●●●'
         validate={(value) => {
-          if (
-            value !==
-            (
-              document.querySelector(
-                'input[name="password"]'
-              ) as HTMLInputElement | null
-            )?.value
-          ) {
-            return 'Passwords do not match';
-          }
+          if (!value) return 'Please confirm your password';
+          if (value !== password) return 'Passwords do not match';
         }}
       />
       <Button type='submit' variant='bordered' className='mt-6'>
