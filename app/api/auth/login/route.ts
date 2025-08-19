@@ -48,7 +48,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ status: 200 });
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('email', email)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return NextResponse.json(
+        { error: 'Failed to fetch user profile' },
+        { status: 500 }
+      );
+    }
+
+    if (!profileData.onboarded) {
+      return NextResponse.json({ status: 200, onboarded: false });
+    }
+
+    return NextResponse.json({ status: 200, onboarded: true });
   } catch (error) {
     return NextResponse.json(
       { error: 'Internal Server Error' },

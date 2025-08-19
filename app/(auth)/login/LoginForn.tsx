@@ -2,11 +2,14 @@
 import LoadingButton from '@/components/loading-button';
 import { PasswordInput } from '@/components/password-input';
 import { addToast, Form, Input } from '@heroui/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function LoginForm() {
   const [password, setPassword] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  const router = useRouter();
 
   const handleSubmit = async (data: { [key: string]: FormDataEntryValue }) => {
     try {
@@ -35,8 +38,13 @@ export default function LoginForm() {
       if (result.status === 200) {
         addToast({
           title: 'Login successful',
-          description: 'You have successfully signed up!',
+          description: 'Head out to the tee box!',
         });
+        if (result.onboarded) {
+          router.push('/');
+        } else {
+          router.push('/onboarding');
+        }
       } else {
         addToast({
           title: 'Login failed',
