@@ -29,7 +29,7 @@ export default function Stepper({
   return (
     <ol
       className={classNames(
-        'mb-6 flex items-center text-center text-sm font-medium text-gray-500 dark:text-gray-400 sm:text-base lg:mb-12',
+        'mb-6 flex items-center justify-between text-center text-sm font-medium text-gray-500 dark:text-gray-400 sm:text-base lg:mb-12',
         className
       )}
       role='list'
@@ -76,7 +76,7 @@ export default function Stepper({
             <span
               className={classNames(
                 isCurrent
-                  ? 'text-gray-900 dark:text-white'
+                  ? 'text-black dark:text-white'
                   : isCompleted
                     ? 'text-emerald-600 dark:text-emerald-500'
                     : 'text-gray-500 dark:text-gray-400'

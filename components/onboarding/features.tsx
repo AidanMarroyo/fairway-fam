@@ -1,6 +1,6 @@
 export default function OnboardingFeatures() {
   return (
-    <div className='block rounded-lg bg-primary-500 p-8 text-white'>
+    <div className='block rounded-lg bg-primary-500 p-8 text-black dark:text-white'>
       <ul className='space-y-4 text-left'>
         <li className='flex items-center space-x-3'>
           <svg
@@ -30,7 +30,7 @@ export default function OnboardingFeatures() {
               clipRule='evenodd'
             />
           </svg>
-          <span>Show off your golf profile.</span>
+          <p>Show off your golf profile.</p>
         </li>
         <li className='flex items-center space-x-3'>
           <svg

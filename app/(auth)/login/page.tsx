@@ -2,7 +2,7 @@ import loginImage from '@/public/images/bogdankrupin.jpg';
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import LoginForm from './LoginForn';
+import LoginForm from './login-form';
 import GoogleSignInButton from './google/GoogleSignInButton';
 
 export const metadata: Metadata = {
