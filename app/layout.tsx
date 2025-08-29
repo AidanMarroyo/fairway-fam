@@ -9,6 +9,7 @@ import { siteConfig } from '@/config/site';
 import { fontSans } from '@/config/fonts';
 import FairwayFamNavbar from '@/components/navbar';
 import { Navbar } from '@/components/navbar-demo';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: {
@@ -35,7 +36,12 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning lang='en'>
-      <head />
+      <head>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+          strategy='beforeInteractive'
+        />
+      </head>
       <body
         className={clsx(
           'min-h-screen text-foreground bg-background font-sans antialiased',

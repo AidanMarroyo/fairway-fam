@@ -1,12 +1,13 @@
 'use client';
-
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
 import { Select, SelectItem } from '@heroui/select';
 import { RadioGroup, Radio } from '@heroui/radio';
 import { Spinner } from '@heroui/spinner';
 import { NumberInput } from '@heroui/react';
+import { GolfCourseSelect } from '@/components/golf-course-autocomplete/course-autocomplete';
+import { AnimatePresence, motion } from 'framer-motion';
 
 type Props = {
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
@@ -39,6 +40,9 @@ export function GolfInfoForm({
   const [homeCourse, setHomeCourse] = useState<string>(
     defaultValues?.homeCourse ?? ''
   );
+  const [homeCoursePlaceId, setHomeCoursePlaceId] = useState<string>('');
+  const [homeCourseLat, setHomeCourseLat] = useState<number | null>(null);
+  const [homeCourseLng, setHomeCourseLng] = useState<number | null>(null);
   const [experienceLevel, setExperienceLevel] = useState<
     'beginner' | 'intermediate' | 'advanced' | 'competitive'
   >(defaultValues?.experienceLevel ?? 'beginner');
@@ -56,6 +60,12 @@ export function GolfInfoForm({
     undefined
   );
   const [sourceErr, setSourceErr] = useState<string | undefined>(undefined);
+  const [showSkip, setShowSkip] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSkip(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // helpers
   const canSubmit = useMemo(() => {
@@ -129,10 +139,6 @@ export function GolfInfoForm({
           inputMode='decimal'
           isRequired
           validate={(val) => {
-            if (!val) {
-              setHandicapErr('Required');
-              return 'Required';
-            }
             // one decimal, optional negative, max two digits before decimal
             const okFormat = /^-?\d{1,2}(\.\d)?$/.test(String(val));
             if (!okFormat) {
@@ -177,8 +183,18 @@ export function GolfInfoForm({
           <SelectItem key='other'>Other</SelectItem>
         </Select>
 
-        {/* Home Course (text for MVP; swap to autocomplete later) */}
-        <Input
+        {handicapSource === 'club_card' && (
+          <Input
+            type='file'
+            label='Proof (optional)'
+            description='Photo/screenshot of club card or app. Once reviewed, player index will be marked as verified.'
+            accept='image/png,image/jpeg,image/webp,image/jpg,image/heic'
+            onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+            className='sm:col-span-2'
+          />
+        )}
+
+        {/* <Input
           type='text'
           name='homeCourse'
           label='Home Course'
@@ -187,6 +203,27 @@ export function GolfInfoForm({
           value={homeCourse}
           onValueChange={setHomeCourse}
           className='sm:col-span-2'
+        /> */}
+        {/* <GooglePlacesInput
+          defaultValue={homeCourse}
+          onSelect={(place) => {
+            setHomeCourse(place.name);
+            setHomeCoursePlaceId(place.placeId);
+            setHomeCourseLat(place.lat);
+            setHomeCourseLng(place.lng);
+            setHomeCourseErr(undefined);
+          }}
+          isInvalid={!!homeCourseErr}
+          errorMessage={homeCourseErr}
+        /> */}
+
+        <GolfCourseSelect
+          onSelect={(place) => {
+            setHomeCourse(place.name);
+            setHomeCoursePlaceId(place.placeId);
+            setHomeCourseLat(place.lat);
+            setHomeCourseLng(place.lng);
+          }}
         />
 
         {/* Experience Level */}
@@ -233,16 +270,6 @@ export function GolfInfoForm({
           <SelectItem key='monthly'>Monthly</SelectItem>
           <SelectItem key='few_per_year'>A few times a year</SelectItem>
         </Select>
-
-        {/* Optional proof upload */}
-        <Input
-          type='file'
-          label='Proof (optional)'
-          description='Photo/screenshot of club card or app'
-          accept='image/png,image/jpeg,image/webp,image/jpg,image/heic'
-          onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-          className='sm:col-span-2'
-        />
       </div>
 
       {/* Navigation buttons */}
@@ -257,21 +284,43 @@ export function GolfInfoForm({
             Prev: {steps[currentStep - 1].label}
           </Button>
         )}
-        <Button
-          type='submit'
-          className='md:w-1/2 [&>span]:text-sm'
-          isDisabled={!canSubmit}
-        >
-          {saving ? (
-            <span className='flex items-center gap-2'>
-              <Spinner size='sm' /> Saving…
-            </span>
-          ) : currentStep === steps.length - 1 ? (
-            'Submit'
-          ) : (
-            `Next: ${steps[currentStep + 1].label}`
-          )}
-        </Button>
+        <div className='flex flex-col flex-1 space-y-3 md:space-x-3'>
+          <Button
+            type='submit'
+            className='w-full [&>span]:text-sm'
+            isDisabled={!canSubmit}
+          >
+            {saving ? (
+              <span className='flex items-center gap-2'>
+                <Spinner size='sm' /> Saving…
+              </span>
+            ) : currentStep === steps.length - 1 ? (
+              'Submit'
+            ) : (
+              `Next: ${steps[currentStep + 1].label}`
+            )}
+          </Button>
+          <AnimatePresence>
+            {showSkip && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.28, ease: 'easeIn' }}
+                // optional: keep layout from jumping when it mounts
+                className='min-h-[44px]'
+              >
+                <Button
+                  type='button'
+                  className='[&>span]:text-sm w-full'
+                  onPress={() => setCurrentStep(2)}
+                >
+                  Skip for now
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </form>
   );

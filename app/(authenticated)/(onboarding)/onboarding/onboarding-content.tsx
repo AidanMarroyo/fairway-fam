@@ -9,6 +9,7 @@ import { Input } from '@heroui/input';
 import { useState } from 'react';
 import { AccountInfoForm } from './account-info-form';
 import { GolfInfoForm } from './golf-info-form';
+import { LocationForm } from './location-form';
 
 export default function OnboardingContent() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -57,9 +58,11 @@ export default function OnboardingContent() {
             )}
 
             {currentStep === 2 && (
-              <div className='my-6'>
-                <p>✅ Review and confirm your details.</p>
-              </div>
+              <LocationForm
+                setCurrentStep={setCurrentStep}
+                currentStep={currentStep}
+                steps={steps}
+              />
             )}
           </div>
         </div>
