@@ -16,8 +16,8 @@ export default function OnboardingContent() {
 
   const steps = [
     { label: 'Account', sublabel: 'Info' },
-    { label: 'Golf', sublabel: 'Info' },
-    { label: 'Confirmation' },
+    { label: 'Handicap', sublabel: 'Info' },
+    { label: 'Location', sublabel: 'Info' },
   ];
 
   return (

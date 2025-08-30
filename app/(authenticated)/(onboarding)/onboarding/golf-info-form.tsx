@@ -99,25 +99,31 @@ export function GolfInfoForm({
 
     try {
       setSaving(true);
+
       const fd = new FormData();
-      fd.append('currentHandicap', currentHandicap.toString());
+      fd.append('currentHandicap', String(currentHandicap));
       fd.append('handicapSource', handicapSource);
       fd.append('homeCourse', homeCourse);
       fd.append('experienceLevel', experienceLevel);
       fd.append('playFrequency', playFrequency);
-      if (proofFile) fd.append('proof', proofFile);
+      if (homeCoursePlaceId) fd.append('homeCoursePlaceId', homeCoursePlaceId);
+      if (homeCourseLat != null)
+        fd.append('homeCourseLat', String(homeCourseLat));
+      if (homeCourseLng != null)
+        fd.append('homeCourseLng', String(homeCourseLng));
 
-      const res = await fetch('/api/onboarding/golf', {
+      // ⬅️ This is the key line
+      if (proofFile) fd.append('proof', proofFile, proofFile.name);
+
+      const res = await fetch('/api/onboarding/handicap', {
         method: 'POST',
+        // IMPORTANT: do NOT set Content-Type. The browser will set multipart/form-data with boundary.
         body: fd,
       });
+
       if (!res.ok) throw new Error((await res.text()) || 'Failed to save');
 
-      if (currentStep < steps.length - 1) {
-        setCurrentStep((s) => s + 1);
-      } else {
-        console.log('Golf info saved');
-      }
+      setCurrentStep((s) => s + 1);
     } catch (err: any) {
       alert(err?.message ?? 'Something went wrong');
     } finally {
@@ -187,7 +193,7 @@ export function GolfInfoForm({
           <Input
             type='file'
             label='Proof (optional)'
-            description='Photo/screenshot of club card or app. Once reviewed, player index will be marked as verified.'
+            description='Photo/screenshot of club card or app. Once reviewed, player index will be marked as a verified WHS index.'
             accept='image/png,image/jpeg,image/webp,image/jpg,image/heic'
             onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
             className='sm:col-span-2'

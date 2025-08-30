@@ -53,6 +53,11 @@ export function LocationForm({ setCurrentStep, currentStep, steps }: Props) {
     return (hasCoords || hasTextLoc) && !!radiusKm && !saving;
   }, [lat, lng, city, postal, radiusKm, saving]);
 
+  const selectedRadiusKeys = React.useMemo(
+    () => new Set([radiusKm]),
+    [radiusKm]
+  );
+
   function validateLocation() {
     const hasCoords = lat && lng;
     const hasTextLoc = city.trim().length >= 2 || postal.trim().length >= 3;
@@ -106,10 +111,19 @@ export function LocationForm({ setCurrentStep, currentStep, steps }: Props) {
       fd.append('lng', String(lng));
       fd.append('radiusKm', radiusKm);
 
-      // Preferences
       fd.append('playStyle', playStyle);
-      fd.append('lookingFor', JSON.stringify(lookingFor)); // array -> JSON
-      fd.append('favoriteFormats', JSON.stringify(favoriteFormats)); // array -> JSON
+      fd.append('lookingFor', JSON.stringify(lookingFor));
+      fd.append('favoriteFormats', JSON.stringify(favoriteFormats));
+      // const formData = {
+      //   city,
+      //   postal,
+      //   lat,
+      //   lng,
+      //   radiusKm,
+      //   playStyle,
+      //   lookingFor,
+      //   favoriteFormats,
+      // };
 
       const res = await fetch('/api/onboarding/location-preferences', {
         method: 'POST',
@@ -117,9 +131,7 @@ export function LocationForm({ setCurrentStep, currentStep, steps }: Props) {
       });
       if (!res.ok) throw new Error((await res.text()) || 'Failed to save');
 
-      // This is the last step
       console.log('Onboarding complete');
-      // e.g., router.push('/welcome') or open success sheet
     } catch (err: any) {
       alert(err?.message ?? 'Something went wrong.');
     } finally {
@@ -131,8 +143,6 @@ export function LocationForm({ setCurrentStep, currentStep, steps }: Props) {
     <form onSubmit={onSubmit}>
       <div className='my-6 grid gap-5 sm:grid-cols-2'>
         {/* City */}
-
-        {homeLocation}
 
         <div className='sm:col-span-2 flex items-center gap-3'>
           <Button
@@ -171,16 +181,28 @@ export function LocationForm({ setCurrentStep, currentStep, steps }: Props) {
         {/* Discovery Radius */}
         <Select
           label='Preferred Range for Discovery'
-          selectedKeys={new Set([radiusKm])}
+          // ✅ controlled & stable
+          selectedKeys={selectedRadiusKeys}
           onSelectionChange={(keys) => {
-            const v = Array.from(keys as Set<string>)[0] as '10' | '25' | '50';
-            if (v) setRadiusKm(v);
+            // keys is Selection: Set<Key> | 'all'
+            const key =
+              keys === 'all' ? '50' : Array.from(keys as Set<string>)[0]; // single-select
+            if (key) setRadiusKm(key as '10' | '25' | '50');
           }}
-          isRequired
+          disallowEmptySelection
           className='sm:col-span-2'
+          // ✅ ensures the trigger shows readable text
+          renderValue={(items) =>
+            items.length
+              ? items.map((i) => i.textValue).join(', ')
+              : 'Select range'
+          }
         >
           {RADIUS_OPTIONS.map((km) => (
-            <SelectItem key={km}>{km} km</SelectItem>
+            // ✅ provide textValue so the trigger can render it
+            <SelectItem key={km} textValue={`${km} km`}>
+              {km} km
+            </SelectItem>
           ))}
         </Select>
 
