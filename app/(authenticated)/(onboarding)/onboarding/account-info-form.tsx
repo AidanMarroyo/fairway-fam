@@ -1,8 +1,9 @@
 'use client';
+import { fetchCurrentUser } from '@/lib/data/fetches/current-user';
 import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
-import { Spinner } from '@heroui/react';
-import { useMemo, useState } from 'react';
+import { addToast, Spinner } from '@heroui/react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function AccountInfoForm({
   setCurrentStep,
@@ -16,6 +17,7 @@ export function AccountInfoForm({
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [initialUsername, setInitialUsername] = useState('');
 
   const canSubmit = useMemo(() => {
     const requiredFilled =
@@ -24,26 +26,57 @@ export function AccountInfoForm({
     return requiredFilled && !saving;
   }, [fullName, username, saving]);
 
+  useEffect(() => {
+    const initialData = fetchCurrentUser();
+
+    initialData.then((data) => {
+      if (data) {
+        setInitialUsername(data.username || '');
+        setFullName(data.full_name || '');
+        setUsername(data.username || '');
+      }
+    });
+  }, []);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
       setSaving(true);
 
-      const fd = new FormData();
-      fd.append('full_name', fullName);
-      fd.append('username', username);
+      if (initialUsername !== username) {
+        const fd = new FormData();
+        fd.append('full_name', fullName);
+        fd.append('username', username);
 
-      const res = await fetch('/api/onboarding/profile', {
-        method: 'POST',
-        body: fd,
-      });
-      if (!res.ok) throw new Error((await res.text()) || 'Failed to save');
+        const res = await fetch('/api/onboarding/profile', {
+          method: 'POST',
+          body: fd,
+        });
+
+        const resData = await res.json();
+
+        if (!resData.success) {
+          if (resData.error === 'Username already taken') {
+            addToast({
+              title: 'Error',
+              description: 'Username already taken',
+            });
+          } else
+            addToast({
+              title: 'Error',
+              description: 'Failed to save profile info',
+            });
+          return;
+        }
+      }
 
       setCurrentStep((s) => s + 1);
-      console.log('Onboarding complete');
     } catch (err: any) {
-      alert(err?.message ?? 'Something went wrong.');
+      addToast({
+        title: 'Error',
+        description: err?.message ?? 'Something went wrong.',
+      });
     } finally {
       setSaving(false);
     }

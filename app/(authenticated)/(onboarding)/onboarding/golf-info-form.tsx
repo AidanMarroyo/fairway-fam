@@ -40,6 +40,10 @@ export function GolfInfoForm({
   const [homeCourse, setHomeCourse] = useState<string>(
     defaultValues?.homeCourse ?? ''
   );
+  const [hasCurrentHandicap, setHasCurrentHandicap] = useState<boolean | null>(
+    null
+  );
+  // golf course details (from place select)
   const [homeCoursePlaceId, setHomeCoursePlaceId] = useState<string>('');
   const [homeCourseLat, setHomeCourseLat] = useState<number | null>(null);
   const [homeCourseLng, setHomeCourseLng] = useState<number | null>(null);
@@ -63,7 +67,7 @@ export function GolfInfoForm({
   const [showSkip, setShowSkip] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSkip(true), 2000);
+    const timer = setTimeout(() => setShowSkip(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -133,71 +137,86 @@ export function GolfInfoForm({
 
   return (
     <form onSubmit={onSubmit}>
-      <div className='my-6 grid gap-5 sm:grid-cols-2'>
-        {/* Current Handicap */}
-        <NumberInput
-          name='currentHandicap'
-          label='Current Handicap (self-reported)'
-          placeholder='e.g., 18.3'
-          description='One decimal, range −10.0 to 54.0. Not an official WHS index.'
-          value={currentHandicap}
-          onValueChange={setCurrentHandicap}
-          inputMode='decimal'
-          isRequired
-          validate={(val) => {
-            // one decimal, optional negative, max two digits before decimal
-            const okFormat = /^-?\d{1,2}(\.\d)?$/.test(String(val));
-            if (!okFormat) {
-              const msg = 'Use one decimal (e.g., 18.3)';
-              setHandicapErr(msg);
-              return msg;
-            }
-            const n = Number(val);
-            if (Number.isNaN(n) || n < -10 || n > 54) {
-              const msg = 'Must be between −10.0 and 54.0';
-              setHandicapErr(msg);
-              return msg;
-            }
-            setHandicapErr(undefined);
-            return undefined;
-          }}
-          isInvalid={!!handicapErr}
-          errorMessage={handicapErr}
-        />
-
-        {/* Handicap Source */}
-        <Select
-          label='Source'
-          selectedKeys={new Set([handicapSource])}
-          onSelectionChange={(keys) => {
-            const v = Array.from(keys as Set<string>)[0] as
-              | 'self_reported'
-              | 'club_card';
-            if (!v) {
-              setSourceErr('Choose a source');
-            } else {
-              setSourceErr(undefined);
-              setHandicapSource(v);
-            }
-          }}
-          isRequired
-          isInvalid={!!sourceErr}
-          errorMessage={sourceErr}
+      <div className='sm:col-span-2'>
+        <RadioGroup
+          label='Do you have a current handicap index?'
+          orientation='horizontal'
+          value={
+            hasCurrentHandicap === null ? '' : hasCurrentHandicap ? 'Yes' : 'No'
+          }
+          onValueChange={(v) => setHasCurrentHandicap(v === 'Yes')}
         >
-          <SelectItem key='self_reported'>Self-reported</SelectItem>
-          <SelectItem key='club_card'>Club card</SelectItem>
-          <SelectItem key='other'>Other</SelectItem>
-        </Select>
+          <Radio value='No'>No</Radio>
+          <Radio value='Yes'>Yes</Radio>
+        </RadioGroup>
+      </div>
 
-        {handicapSource === 'club_card' && (
-          <Input
-            type='file'
-            label='Proof (optional)'
-            description='Photo/screenshot of club card or app. Once reviewed, player index will be marked as a verified WHS index.'
-            accept='image/png,image/jpeg,image/webp,image/jpg,image/heic'
-            onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-            className='sm:col-span-2'
-          />
+      <div className='my-6 grid gap-5 sm:grid-cols-2'>
+        {hasCurrentHandicap && (
+          <>
+            <NumberInput
+              name='currentHandicap'
+              label='Current Handicap (self-reported)'
+              placeholder='e.g., 18.3'
+              description='One decimal, range −10.0 to 54.0. Not an official WHS index.'
+              value={currentHandicap}
+              onValueChange={setCurrentHandicap}
+              inputMode='decimal'
+              isRequired
+              validate={(val) => {
+                // one decimal, optional negative, max two digits before decimal
+                const okFormat = /^-?\d{1,2}(\.\d)?$/.test(String(val));
+                if (!okFormat) {
+                  const msg = 'Use one decimal (e.g., 18.3)';
+                  setHandicapErr(msg);
+                  return msg;
+                }
+                const n = Number(val);
+                if (Number.isNaN(n) || n < -10 || n > 54) {
+                  const msg = 'Must be between −10.0 and 54.0';
+                  setHandicapErr(msg);
+                  return msg;
+                }
+                setHandicapErr(undefined);
+                return undefined;
+              }}
+              isInvalid={!!handicapErr}
+              errorMessage={handicapErr}
+            />
+            <Select
+              label='Source'
+              selectedKeys={new Set([handicapSource])}
+              onSelectionChange={(keys) => {
+                const v = Array.from(keys as Set<string>)[0] as
+                  | 'self_reported'
+                  | 'club_card';
+                if (!v) {
+                  setSourceErr('Choose a source');
+                } else {
+                  setSourceErr(undefined);
+                  setHandicapSource(v);
+                }
+              }}
+              isRequired
+              isInvalid={!!sourceErr}
+              errorMessage={sourceErr}
+            >
+              <SelectItem key='self_reported'>Self-reported</SelectItem>
+              <SelectItem key='club_card'>Club card</SelectItem>
+              <SelectItem key='other'>Other</SelectItem>
+            </Select>
+
+            {handicapSource === 'club_card' && (
+              <Input
+                type='file'
+                label='Proof (optional)'
+                description='Photo/screenshot of club card or app. Once reviewed, player index will be marked as a verified WHS index.'
+                accept='image/png,image/jpeg,image/webp,image/jpg,image/heic'
+                onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                className='sm:col-span-2'
+              />
+            )}
+          </>
         )}
 
         {/* <Input
